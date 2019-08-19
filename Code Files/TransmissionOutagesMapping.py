@@ -12,16 +12,16 @@ class TransmissionOutagesMapping():
     def outagesMapping(self):
 
         # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-        outagesInputFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2019-01-01_to_2019-07-24.xlsx", sheet_name="2019", index=False)
+        outagesInputFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages - 2014 to 2019\UniqueTransmissionOutagesMapped2014-2019NewParallel.xlsx", sheet_name="Unmapped", index=False)
 
         # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
         outagesInputFile.columns = outagesInputFile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
 
         #dropping duplicates based on facility
-        outagesInputFile = outagesInputFile.drop_duplicates(subset='facility')
+        #outagesInputFile = outagesInputFile.drop_duplicates(subset='facility')
 
         # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data (mapping file used is of July 2019)
-        auctionMappingFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2019-01-01_to_2019-07-24.xlsx", sheet_name="AuctionMapping2019JUL", index=False)
+        auctionMappingFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages - 2014 to 2019\UniqueTransmissionOutagesMapped2014-2019NewParallel.xlsx", sheet_name="AuctionMapping2019SEP_LINES", index=False)
 
         # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
         auctionMappingFile.columns = auctionMappingFile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
@@ -42,7 +42,7 @@ class TransmissionOutagesMapping():
             auctionMappingFile.at[index, 'op_eqcode'] = data['op_eqcode']
 
         # Saving the changes outagesInputFile Dataframe to an excel file
-        writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Data\UniqueTransmissionOutagesMapped2019.xlsx")
+        writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages - 2014 to 2019\UniqueTransmissionOutagesMapped2014-2019NewParallelUnmapped.xlsx")
         outagesInputFile.to_excel(writer, 'Sheet1')
         auctionMappingFile.to_excel(writer, 'Sheet2')
         writer.save()
