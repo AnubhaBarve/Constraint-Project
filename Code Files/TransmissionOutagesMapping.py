@@ -16,6 +16,7 @@ class TransmissionOutagesMapping():
 
         # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
         outagesInputFile.columns = outagesInputFile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
+        outagesInputFile.reset_index(inplace=True, drop=True)
 
         #dropping duplicates based on facility
         #outagesInputFile = outagesInputFile.drop_duplicates(subset='facility')
@@ -25,9 +26,7 @@ class TransmissionOutagesMapping():
 
         # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
         auctionMappingFile.columns = auctionMappingFile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
-
-        print(outagesInputFile.columns)
-        print(auctionMappingFile.columns)
+        auctionMappingFile.reset_index(inplace=True, drop=True)
 
         # Changing the row values of 'to' column in outagesInputFile by removing all the special characters (to make mapping easier)
         for index,data in outagesInputFile.iterrows():
