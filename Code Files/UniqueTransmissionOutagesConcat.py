@@ -186,13 +186,13 @@ def main():
     finalOutages_unmapped = finalOutages_unmapped.append(resultunmapped18)
     finalOutages_unmapped = finalOutages_unmapped.append(resultunmapped19)
 
-
     # Creating a new dataframe that stores unique transmission outages present in finalOutages dataframe by dropping the duplicates based on value of 'facility' column
     finalOutages_all = finalOutages_all.drop_duplicates(subset='facility', keep='first', inplace=False)
     finalOutages_mapped = finalOutages_mapped.drop_duplicates(subset='facility', keep='first', inplace=False)
     finalOutages_unmapped = finalOutages_unmapped.drop_duplicates(subset='facility', keep='first', inplace=False)
+
     # Saving the finalOutagesUnique and finalOutages dataframe to an excel file
-    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2014-2019New.xlsx")
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2014-2019.xlsx")
     # Saving mapped transmission outages with duplicates to Sheet1 of excel file
     finalOutages_all.to_excel(writer, 'Sheet1')
     # Saving mapped transmission outages without duplicates to Sheet2 of the same excel file
