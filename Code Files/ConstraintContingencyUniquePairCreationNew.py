@@ -53,7 +53,7 @@ class UniquePair():
         outputFile = outputFile.append(sheet6)
 
         # Creating a new excel file for the list of unique pairs
-        writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\uniquePairList2014-2019New.xlsx")
+        writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\uniquePairList2014-2019.xlsx")
         # Storing the outputFile dataframe to the newly created excel file above and saving it
         outputFile.to_excel(writer, 'Sheet1')
         # saving the excel file

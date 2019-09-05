@@ -2,7 +2,7 @@
 # Created by: Anubha Barve (anubha.barve@constellation.com - Intern 2019)
 # File name: ConstraintContingencyMappingNew.py
 # Purpose: This file is created to format the constraint-contingency file such that 'code' column values are changed by removing all special characters and similarly special characters are removed from
-# auction mapping file's 'op_eqcode' column as well to make the mapping easier i.e the constraints can be mapped in PowerWorld with their respective From Bus Number and To Bus Number
+# auction mapping file's 'op_eqcode' column as well to make the mapping easier i.e the constraints can be mapped with their respective From Bus Number and To Bus Number
 
 # import statement
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
