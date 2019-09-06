@@ -78,7 +78,7 @@ def mappedboth(inputfile):
 
 def main():
     # inputfile stores the unique constraint=contingency pairs from the year 2014 to 2019.
-    inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\uniquePairList2014-2019NewChanged.xlsx", sheet_name="Constraint-Contingency", index= False)
+    inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\uniquePairList2014-2019Changed.xlsx", sheet_name="Constraint-Contingency", index= False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile.columns = inputfile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves the index and converts into a column
@@ -109,15 +109,15 @@ def main():
     # creating an excel file to store the resultant dataframes
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\uniquePairList2014-2019Separation.xlsx")
     # writing the resulting dataframe obtained when mappedconstraint function is called to an excel sheet
-    result.to_excel(writer,'Sheet1')
+    result.to_excel(writer,'mappedConstraints')
     # writing the resulting dataframe obtained when mappedcontingency function is called to an excel sheet
-    result1.to_excel(writer,'Sheet2')
+    result1.to_excel(writer,'mappedContingency')
     # writing the resulting dataframe obtained when unmappedcontraint function is called to an excel sheet
-    result2.to_excel(writer, 'Sheet3')
+    result2.to_excel(writer, 'unmappedConstraints')
     # writing the resulting dataframe obtained when unmappedcontingency function is called to an excel sheet
-    result3.to_excel(writer, 'Sheet4')
+    result3.to_excel(writer, 'unmappedContingency')
     # writing the resulting dataframe obtained when mappedboth function is called to an excel sheet
-    result4.to_excel(writer, 'Sheet5')
+    result4.to_excel(writer, 'mappedBoth')
     # saving the excel file
     writer.save()
 

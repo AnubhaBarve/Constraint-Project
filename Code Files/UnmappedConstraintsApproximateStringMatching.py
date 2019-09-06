@@ -52,7 +52,7 @@ def main():
     pool.join()
 
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\UnmappedConstraintsApproximateStringMatching.xlsx")
-    result.to_excel(writer, 'Sheet1')
+    result.to_excel(writer, 'All')
     writer.save()
 
 
