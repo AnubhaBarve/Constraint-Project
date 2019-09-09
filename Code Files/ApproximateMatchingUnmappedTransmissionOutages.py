@@ -1,7 +1,7 @@
 # Created on: August 20,2019
 # Created by: Anubha Barve (anubha.barve@constellation.com - Intern 2019)
 # Purpose - this file is created to perform approximate similarity matching of the unmapped transmission outages with the 'operations_name' and 'op_eqcode'
-#           of autos  and lines excel sheets respectively.
+#           columns of autos  and lines sheets respectively of the auction mapping excel file.
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -108,9 +108,9 @@ def main():
     pool.join()
 
     # creating an excel file to store the result
-    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UnmappedTransmissionOutagesAprroximateStringMatch1.xlsx")
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UnmappedTransmissionOutagesAprroximateStringMatch.xlsx")
     # writing the result to an excel sheet
-    result.to_excel(writer, 'Sheet1')
+    result.to_excel(writer, 'unmappedAll')
     # saving the excel file
     writer.save()
 

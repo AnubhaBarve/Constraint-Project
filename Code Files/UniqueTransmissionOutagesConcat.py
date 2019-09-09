@@ -186,6 +186,20 @@ def main():
     finalOutages_unmapped = finalOutages_unmapped.append(resultunmapped18)
     finalOutages_unmapped = finalOutages_unmapped.append(resultunmapped19)
 
+    # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data of transformer facilities (mapping file used is of September 2019)
+    auctionMappingFile_autos = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Mapping Documents\2019.SEP.Monthly.Auction.MappingDocument.xlsx",sheet_name="Autos", index=False)
+    # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
+    auctionMappingFile_autos.columns = auctionMappingFile_autos.columns.str.strip().str.lower().str.replace(' ','_').str.replace(')', '').str.replace(')', '')
+    # preserves index and converts into a column
+    auctionMappingFile_autos.reset_index(inplace=True, drop=True)
+
+    # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data of line facilities (mapping file used is of September 2019)
+    auctionMappingFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Mapping Documents\2019.SEP.Monthly.Auction.MappingDocument.xlsx",sheet_name="Lines", index=False)
+    # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
+    auctionMappingFile.columns = auctionMappingFile.columns.str.strip().str.lower().str.replace(' ','_').str.replace(')', '').str.replace(')', '')
+    # preserves index and converts into a column
+    auctionMappingFile.reset_index(inplace=True, drop=True)
+
     # Creating a new dataframe that stores unique transmission outages present in finalOutages dataframe by dropping the duplicates based on value of 'facility' column
     finalOutages_all = finalOutages_all.drop_duplicates(subset='facility', keep='first', inplace=False)
     finalOutages_mapped = finalOutages_mapped.drop_duplicates(subset='facility', keep='first', inplace=False)
@@ -194,10 +208,16 @@ def main():
     # Saving the finalOutagesUnique and finalOutages dataframe to an excel file
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2014-2019.xlsx")
     # Saving mapped transmission outages with duplicates to Sheet1 of excel file
-    finalOutages_all.to_excel(writer, 'Sheet1')
+    finalOutages_all.to_excel(writer, 'All')
     # Saving mapped transmission outages without duplicates to Sheet2 of the same excel file
-    finalOutages_mapped.to_excel(writer, 'Sheet2')
-    finalOutages_unmapped.to_excel(writer, 'Sheet3')
+    finalOutages_mapped.to_excel(writer, 'Mapped')
+    # Saving unmapped transmission outages without duplicates to Sheet2 of the same excel file
+    finalOutages_unmapped.to_excel(writer, 'Unmapped')
+    # Saving auction mapping data of line facilities
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    # Saving auction mapping data of transformer facilities
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
+    # saving the excel sheet
     writer.save()
 
 

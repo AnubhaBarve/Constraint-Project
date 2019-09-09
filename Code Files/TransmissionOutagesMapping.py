@@ -26,7 +26,7 @@ def outagesMapping(outagesInputFile):
 # auctionFormatting function changes the 'op_code' column values removing the special characters
 def auctionFormatting():
 
-    # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data (mapping file used is of July 2019)
+    # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data (mapping file used is of September 2019)
     auctionMappingFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Mapping Documents\2019.SEP.Monthly.Auction.MappingDocument.xlsx",sheet_name="Lines", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     auctionMappingFile.columns = auctionMappingFile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(')', '').str.replace(')', '')
@@ -44,47 +44,54 @@ def auctionFormatting():
 
 
 def main():
-    # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-    inputfile14 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2014-01-01_to_2014-12-31.xlsx",sheet_name="2014", index=False)
+    # The inputfile14 DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2014
+    inputfile14 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages\ERCOT_TransmissionOutage_2014-01-01_to_2014-12-31.xlsx",sheet_name="2014", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile14.columns = inputfile14.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves index and stores into a column
     inputfile14.reset_index(inplace=True, drop=True)
 
-    # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-    inputfile15 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2015-01-01_to_2015-12-31.xlsx",sheet_name="2015", index=False)
+    # The inputfile15 DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2015
+    inputfile15 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages\ERCOT_TransmissionOutage_2015-01-01_to_2015-12-31.xlsx",sheet_name="2015", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile15.columns = inputfile15.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves index and stores into a column
     inputfile15.reset_index(inplace=True, drop=True)
 
-    # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-    inputfile16 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2016-01-01_to_2016-12-31.xlsx",sheet_name="2016", index=False)
+    # The inputfile16 DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2016
+    inputfile16 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages\ERCOT_TransmissionOutage_2015-01-01_to_2015-12-31.xlsx",sheet_name="2016", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile16.columns = inputfile16.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves index and stores into a column
     inputfile16.reset_index(inplace=True, drop=True)
 
-    # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-    inputfile17 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2017-01-01_to_2017-12-31.xlsx",sheet_name="2017", index=False)
+    # The inputfile17 DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2017
+    inputfile17 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages\ERCOT_TransmissionOutage_2017-01-01_to_2017-12-31.xlsx",sheet_name="2017", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile17.columns = inputfile17.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves index and stores into a column
     inputfile17.reset_index(inplace=True, drop=True)
 
-    # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-    inputfile18 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2018-01-01_to_2018-12-31.xlsx",sheet_name="2018", index=False)
+    # The inputfile18 DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
+    inputfile18 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages\ERCOT_TransmissionOutage_2018-01-01_to_2018-12-31.xlsx",sheet_name="2018", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile18.columns = inputfile18.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves index and stores into a column
     inputfile18.reset_index(inplace=True, drop=True)
 
-    # The outagesInputFile DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2018
-    inputfile19 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Outages + Constraint\ERCOT_TransmissionOutage_2019-01-01_to_2019-12-31.xlsx",sheet_name="2019", index=False)
+    # The inputfile19 DataFrame stores the input file i.e. excel file that contains transmission outages data for the year 2019
+    inputfile19 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Transmission Outages\ERCOT_TransmissionOutage_2019-01-01_to_2019-07-24.xlsx",sheet_name="2019", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile15.columns = inputfile15.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # preserves index and stores into a column
     inputfile15.reset_index(inplace=True, drop=True)
+
+    # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data (mapping file used is of September 2019)
+    auctionMappingFile_autos = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Mapping Documents\2019.SEP.Monthly.Auction.MappingDocument.xlsx",sheet_name="Autos", index=False)
+    # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
+    auctionMappingFile_autos.columns = auctionMappingFile_autos.columns.str.strip().str.lower().str.replace(' ', '_').str.replace(')', '').str.replace(')', '')
+    # preserves index and converts into a column
+    auctionMappingFile_autos.reset_index(inplace=True, drop=True)
 
     # parallel processing - to enable faster execution
     # this gives the number of processors available to use in the system
@@ -107,45 +114,52 @@ def main():
     result19 = pd.concat(pool.map(outagesMapping, inputfile_split19))
     # closing all processes
     pool.close()
-    # joining all processes
+    # waiting untill all processes are finished
     pool.join()
 
+    # class to auctionFormatting() function
     auctionMappingFile = auctionFormatting()
 
     # Saving the resultant Dataframe of year 2014 to an excel file along with auction mapping document
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2014.xlsx")
-    result14.to_excel(writer, 'Sheet1')
-    auctionMappingFile.to_excel(writer, 'Sheet2')
+    result14.to_excel(writer, 'Outages')
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
     writer.save()
 
     # Saving the resultant Dataframe of year 2015 to an excel file along with auction mapping document
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2015.xlsx")
-    result15.to_excel(writer, 'Sheet1')
-    auctionMappingFile.to_excel(writer, 'Sheet2')
+    result15.to_excel(writer, 'Outages')
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
     writer.save()
 
     # Saving the resultant Dataframe of year 2016 to an excel file along with auction mapping document
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2016.xlsx")
-    result16.to_excel(writer, 'Sheet1')
-    auctionMappingFile.to_excel(writer, 'Sheet2')
+    result16.to_excel(writer, 'Outages')
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
     writer.save()
 
     # Saving the resultant Dataframe of year 2017 to an excel file along with auction mapping document
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2017.xlsx")
-    result17.to_excel(writer, 'Sheet1')
-    auctionMappingFile.to_excel(writer, 'Sheet2')
+    result17.to_excel(writer, 'Outages')
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
     writer.save()
 
     # Saving the resultant Dataframe of year 2018 to an excel file along with auction mapping document
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2018.xlsx")
-    result18.to_excel(writer, 'Sheet1')
-    auctionMappingFile.to_excel(writer, 'Sheet2')
+    result18.to_excel(writer, 'Outages')
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
     writer.save()
 
     # Saving the resultant Dataframe of year 2019 to an excel file along with auction mapping document
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueTransmissionOutagesMapped2019.xlsx")
-    result19.to_excel(writer, 'Sheet1')
-    auctionMappingFile.to_excel(writer, 'Sheet2')
+    result19.to_excel(writer, 'Outages')
+    auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP_LINES')
+    auctionMappingFile_autos.to_excel(writer, 'AuctionMapping2019SEP_AUTOS')
     writer.save()
 
 # call to main function

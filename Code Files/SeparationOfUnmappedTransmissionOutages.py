@@ -110,7 +110,7 @@ def separationunmapped(inputfile):
 def main():
 
     # inputfile stores the transmission outages file which contains unmapped outages which are mapped manually
-    inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UnmappedTransmissionOutagesAprroximateStringMatch1.xlsx",sheet_name="unmappedAll", index=False)
+    inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UnmappedTransmissionOutagesAprroximateStringMatch.xlsx",sheet_name="unmappedAll", index=False)
     # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
     inputfile.columns = inputfile.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
     # preserves index and converts into column
@@ -135,9 +135,9 @@ def main():
     # creating an excel file to store the result
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UnmappedTransmissionOutagesAprroximateSeparation.xlsx")
     # writing the result to an excel sheet
-    result.to_excel(writer, 'Sheet1')
+    result.to_excel(writer, 'mapped')
     # writing the result to an excel sheet
-    result1.to_excel(writer, 'Sheet2')
+    result1.to_excel(writer, 'unmapped')
     # saving the excel file
     writer.save()
 
