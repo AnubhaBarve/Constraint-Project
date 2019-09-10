@@ -33,6 +33,20 @@ class UniquePair():
         # inputFile19 variable contains the Input Excel File which consist of the Historical Constraint Data of the year 2019
         inputFile19 = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\New Constraint Data\constraint19.xls",sheet_name="Sheet0", index=False)
 
+        # auctionMappingFile_contingency DataFrame stores the excel file that contains the auction mapping data of transformer facilities (mapping file used is of September 2019)
+        auctionMappingFile_contingency = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Mapping Documents\2019.SEP.Monthly.Auction.Contingencies.CSV",sheet_name="2019.SEP.Monthly.Auction.Contin", index=False)
+        # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
+        auctionMappingFile_contingency.columns = auctionMappingFile_contingency.columns.str.strip().str.lower().str.replace(' ','_').str.replace(')', '').str.replace(')', '')
+        # preserves index and converts into a column
+        auctionMappingFile_contingency.reset_index(inplace=True, drop=True)
+
+        # auctionMappingFile DataFrame stores the excel file that contains the auction mapping data of line facilities (mapping file used is of September 2019)
+        auctionMappingFile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Mapping Documents\2019.SEP.Monthly.Auction.MappingDocument.xlsx",sheet_name="Lines", index=False)
+        # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
+        auctionMappingFile.columns = auctionMappingFile.columns.str.strip().str.lower().str.replace(' ','_').str.replace(')', '').str.replace(')', '')
+        # preserves index and converts into a column
+        auctionMappingFile.reset_index(inplace=True, drop=True)
+
         # Creating an empty dataframe to store the final result of all the years
         outputFile = pd.DataFrame()
 
@@ -54,8 +68,12 @@ class UniquePair():
 
         # Creating a new excel file for the list of unique pairs
         writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\uniquePairList2014-2019.xlsx")
-        # Storing the outputFile dataframe to the newly created excel file above and saving it
+        # Storing the outputFile dataframe to the newly created excel file above
         outputFile.to_excel(writer, 'Constraint-Contingency')
+        # Storing the auction mapping file to the newly created excel file above
+        auctionMappingFile.to_excel(writer, 'AuctionMapping2019SEP')
+        # Storing the auction contingency file to the newly created excel file above
+        auctionMappingFile_contingency.to_excel(writer, 'AuctionContingency2019SEP')
         # saving the excel file
         writer.save()
 
