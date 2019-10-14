@@ -11,15 +11,32 @@ from win32com.client import Dispatch
 from win32com.client import VARIANT
 from ConstraintContingencyInterfaceCreation import InterfaceMap
 from ConstraintContingencyInterfaceDefinitionPowerWorld import interfaceDefinition
+import datetime
 
 
 simauto = None
 
 def createsample():
     inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\ConstraintContingencyFinalList.xlsx", sheet_name="2019", index=False)
-    result = inputfile.sample(n=21, axis=0, replace=True)
-    result['datetime'] = pd.to_datetime(result['datetime'])
-    result['date'] = result['datetime'].dt.date
+
+    inputfile['datetime'] = pd.to_datetime(inputfile['datetime'])
+    inputfile['date'] = inputfile['datetime'].dt.date
+
+    file = pd.DataFrame()
+    strtdate = "2019/01/01"
+    enddate = "2019/07/24"
+
+    frmt = "%Y/%m/%d"
+
+    strtdate = datetime.datetime.strptime(strtdate, frmt).date()
+
+    enddate = datetime.datetime.strptime(enddate, frmt).date()
+
+    for i,r in inputfile.iterrows():
+        if strtdate <= r['date'] <= enddate:
+            file = file.append(r)
+
+    result = file.sample(n=21, axis=0, replace=True)
 
     return result
 

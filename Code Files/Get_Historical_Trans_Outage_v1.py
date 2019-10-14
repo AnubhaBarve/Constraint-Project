@@ -40,7 +40,7 @@ param['regions'] = ['ERCOT']
 # regions = ['PJMISO', 'ERCOT', 'MISO', 'NEISO', 'SPPISO', 'CAISO','NYISO']
 
 ## Start year
-param['styear'] = 2014
+param['styear'] = 2019
 ## end year
 param['endyear'] = dt.datetime.today().year
 
@@ -59,8 +59,7 @@ for reg in param['regions']:
 
         ## Output directory
         ## path of the output file
-        param['outputDir'] = 'S:\\asset ops\\GO_Group\\Interns\\2019\\Anubha\\Constraint Project\\Data\\' +\
-        reg + '\\'
+        param['outputDir'] = 'S:\\asset ops\\GO_Group\\Interns\\2019\\Anubha\\Constraint Project\\Constraint-Project\\Data\\Transmission Outages\\'
 
         outputFile = reg + '_TransmissionOutage_' + \
         str(year) + '-01-01' + '_to_' + \
