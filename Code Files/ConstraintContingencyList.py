@@ -1,46 +1,60 @@
 # Created on: September 16, 2019
 # Created by: Anubha Barve (anubha.barve@constellation - Intern 2019)
 # File name: ConstraintContingencyList.py
-# Purpose: This file is developed to create a super-list of transmission outages i.e combine unique transmission outages(facility and start date unique) of all years into one file which are mapped (for now only storing
-# data for line and transformer facilities)
+# Purpose: This file is developed to create a super-list of constraint-contingency pairs for all the
+# years which are mapped.
+
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 import pandas as pd
 from tqdm import tqdm
-
 import pandas as pd
 from tqdm import tqdm
 import multiprocessing as mp
 import numpy as np
 from multiprocessing import Pool
 
-# This class define a function named concatenate which combines the unique transmission outages that are mapped of all years
-#class TransmissionOutagesConcatenation():
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# code starts
+
+# the function combine is used to pull only mapped constraints from the given dataframe
+
+
 def combine(df):
 
-    # finalOutages is an empty dataframe created to store the final output
-    finalOutages_all = pd.DataFrame()
+    # finaloutput_all is an empty dataframe created to store the final output
+    finaloutput_all = pd.DataFrame()
     # Iterating the df dataframe row-wise (where tqdm displays progress of the loop during execution)
     for i1, r1 in tqdm(df.iterrows()):
         if str(r1['constraint_from_bus_number']) != " ":
-            finalOutages_all = finalOutages_all.append(r1)
-    return finalOutages_all
+            finaloutput_all = finaloutput_all.append(r1)
+    return finaloutput_all
 
-# main function which calls the class's function named 'combine()'
+# main function
+
+
 def main():
-    # final_file is a string that stores the name of the final transmission outages file
+    # final_file is a string that stores the name of the constraint-contingency hourly data for all years file
     final_file = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\ConstraintContingencyList.xlsx"
 
-    # dataFrame14 reads the excel file whose name is stored in year_2014 as a dataframe
+    # dataFrame14 reads the excel file whose name is stored in final_file as a dataframe
     dataFrame14 = pd.read_excel(final_file, sheet_name="2014", index=False)
-    # Formatting the column names of excel sheet into one form to make it easier to access column names (all lower case letters with words separated using underscore)
+    # Formatting the column names of excel sheet into one form to make it easier to
+    # access column names (all lower case letters with words separated using underscore)
     dataFrame14.columns = dataFrame14.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # this line preserves the index and converts it into a column
     dataFrame14.reset_index(inplace=True, drop=True)
+    # cores stores the value of the number of processors available in the system
     cores = mp.cpu_count()
+    # dataframe_14 is split into chunks for parallel processing
     dataFrame14_split = np.array_split(dataFrame14, cores)
+    # creating process pools equivalent to processors available
     pool = Pool(cores)
+    # call to combine function
     result14 = pd.concat(pool.map(combine, dataFrame14_split))
+    # dropping duplicate rows in resultant dataframe
     resultmapped14 = result14.drop_duplicates(subset=['facilityname', 'datetime'], keep='first', inplace=False)
+    # closing all pools
     pool.close()
     pool.join()
 
@@ -50,11 +64,17 @@ def main():
     dataFrame15.columns = dataFrame15.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # this line preserves the index and converts it into a column
     dataFrame15.reset_index(inplace=True, drop=True)
+    # cores stores the value of the number of processors available in the system
     cores = mp.cpu_count()
+    # dataframe_15 is split into chunks for parallel processing
     dataFrame15_split = np.array_split(dataFrame15, cores)
+    # creating process pools equivalent to processors available
     pool = Pool(cores)
+    # call to combine function
     result15 = pd.concat(pool.map(combine, dataFrame15_split))
+    # dropping duplicate rows in resultant dataframe
     resultmapped15 = result15.drop_duplicates(subset=['facilityname', 'datetime'], keep='first', inplace=False)
+    # closing all pools
     pool.close()
     pool.join()
 
@@ -64,11 +84,17 @@ def main():
     dataFrame16.columns = dataFrame16.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # this line preserves the index and converts it into a column
     dataFrame16.reset_index(inplace=True, drop=True)
+    # cores stores the value of the number of processors available in the system
     cores = mp.cpu_count()
+    # dataframe_16 is split into chunks for parallel processing
     dataFrame16_split = np.array_split(dataFrame16, cores)
+    # creating process pools equivalent to processors available
     pool = Pool(cores)
+    # call to combine function
     result16 = pd.concat(pool.map(combine, dataFrame16_split))
+    # dropping duplicate rows in resultant dataframe
     resultmapped16 = result16.drop_duplicates(subset=['facilityname', 'datetime'], keep='first', inplace=False)
+    # closing all pools
     pool.close()
     pool.join()
 
@@ -78,11 +104,17 @@ def main():
     dataFrame17.columns = dataFrame17.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # this line preserves the index and converts it into a column
     dataFrame17.reset_index(inplace=True, drop=True)
+    # cores stores the value of the number of processors available in the system
     cores = mp.cpu_count()
+    # dataframe_17 is split into chunks for parallel processing
     dataFrame17_split = np.array_split(dataFrame17, cores)
+    # creating process pools equivalent to processors available
     pool = Pool(cores)
+    # call to combine function
     result17 = pd.concat(pool.map(combine, dataFrame17_split))
+    # dropping duplicate rows in resultant dataframe
     resultmapped17 = result17.drop_duplicates(subset=['facilityname', 'datetime'], keep='first', inplace=False)
+    # closing all pools
     pool.close()
     pool.join()
 
@@ -92,11 +124,16 @@ def main():
     dataFrame18.columns = dataFrame18.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # this line preserves the index and converts it into a column
     dataFrame18.reset_index(inplace=True, drop=True)
+    # cores stores the value of the number of processors available in the system
     cores = mp.cpu_count()
     dataFrame18_split = np.array_split(dataFrame18, cores)
+    # creating process pools equivalent to processors available
     pool = Pool(cores)
+    # call to combine function
     result18 = pd.concat(pool.map(combine, dataFrame18_split))
+    # dropping duplicate rows in resultant dataframe
     resultmapped18 = result18.drop_duplicates(subset=['facilityname', 'datetime'], keep='first', inplace=False)
+    # closing all pools
     pool.close()
     pool.join()
 
@@ -106,27 +143,32 @@ def main():
     dataFrame19.columns = dataFrame19.columns.str.strip().str.lower().str.replace(' ', '_').str.replace('(','').str.replace(')', '')
     # this line preserves the index and converts it into a column
     dataFrame19.reset_index(inplace=True, drop=True)
+    # cores stores the value of the number of processors available in the system
     cores = mp.cpu_count()
     dataFrame19_split = np.array_split(dataFrame19, cores)
+    # creating process pools equivalent to processors available
     pool = Pool(cores)
+    # call to combine function
     result19 = pd.concat(pool.map(combine, dataFrame19_split))
+    # dropping duplicate rows in resultant dataframe
     resultmapped19 = result19.drop_duplicates(subset=['facilityname', 'datetime'], keep='first', inplace=False)
+    # closing all pools
     pool.close()
     pool.join()
 
-    # Saving the finalOutagesUnique and finalOutages dataframe to an excel file
+    # creating an excel sheet
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\ConstraintContingencyFinalList.xlsx")
-    # Saving mapped transmission outages with duplicates to Sheet1 of excel file
+    # writing to the created excel file
     resultmapped14.to_excel(writer, '2014')
     resultmapped15.to_excel(writer, '2015')
     resultmapped16.to_excel(writer, '2016')
     resultmapped17.to_excel(writer, '2017')
     resultmapped18.to_excel(writer, '2018')
     resultmapped19.to_excel(writer, '2019')
-    # Saving mapped transmission outages without duplicates to Sheet2 of the same excel file
-    #finalOutages_mapped.to_excel(writer, 'Mapped')
-    # saving the excel sheet
+    # saving the excel file
     writer.save()
+
+# call to main function
 
 
 if __name__ == '__main__':
