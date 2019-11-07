@@ -8,17 +8,40 @@
 
 import pandas as pd
 from tqdm import tqdm
-import datetime
-import string as str
+import datetime as dt
 import numpy as np
 import time
+import multiprocessing as mp
+from multiprocessing import Pool
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Code starts
 # function filter_horizontal is used to create the training dataset which takes constraints, outages and LODF calculation file as parameters
 
 
-def filter_horizontal(constraints, outages, LODF_file):
+def filter_horizontal(LODF_file):
+
+
+    # constraints stores the list of constraints (sample) in the form of a dataframe
+    constraints = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\Constraints.xlsx",sheet_name="2019 Sample", index=False)
+
+    # converting the "datetime" column to datetime object for ease of use
+    constraints['datetime'] = pd.to_datetime(constraints['datetime'])
+    # extracting time from the datetime object and storing it into a new column of constraints dataframe
+    constraints['time'] = constraints['datetime'].dt.time
+    # extracting date from the datetime object and storing it into a new column of constraints dataframe
+    constraints['date'] = constraints['datetime'].dt.date
+
+    # outages stores the list of outages (sample) in the form of a dataframe
+    outages = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\Outages.xlsx",sheet_name="2019 Sample", index=False)
+
+    # converting the "startdate" column to datetime object for ease of use
+    outages['startdate'] = pd.to_datetime(outages['startdate'])
+    # extracting time from the datetime object and storing it into a new column of outages dataframe
+    outages['time'] = outages['startdate'].dt.time
+    # extracting date from the datetime object and storing it into a new column of outages dataframe
+    outages['date'] = outages['startdate'].dt.date
+
 
     # constraints - contains all the constraints ocnsidered for calculating LODF
     # outages - contains all the outages picked according to the constraint date which
@@ -116,66 +139,54 @@ def filter_horizontal(constraints, outages, LODF_file):
 
 def main():
 
-
-    # constraints stores the list of constraints (sample) in the form of a dataframe
-    constraints = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\Constraints.xlsx", sheet_name="2019 Sample", index=False)
-
-    # converting the "datetime" column to datetime object for ease of use
-    constraints['datetime'] = pd.to_datetime(constraints['datetime'])
-    # extracting time from the datetime object and storing it into a new column of constraints dataframe
-    constraints['time'] = constraints['datetime'].dt.time
-    # extracting date from the datetime object and storing it into a new column of constraints dataframe
-    constraints['date'] = constraints['datetime'].dt.date
-
-    # outages stores the list of outages (sample) in the form of a dataframe
-    outages = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\Outages.xlsx", sheet_name="2019 Sample", index=False)
-
-    # converting the "startdate" column to datetime object for ease of use
-    outages['startdate'] = pd.to_datetime(outages['startdate'])
-    # extracting time from the datetime object and storing it into a new column of outages dataframe
-    outages['time'] = outages['startdate'].dt.time
-    # extracting date from the datetime object and storing it into a new column of outages dataframe
-    outages['date'] = outages['startdate'].dt.date
-
     # loadf_file stores the calculation result in the form of a dataframe
     lodf_file = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\CalculationLODF.xlsx", sheet_name="LODF", index=False)
     # converting the column names to lower case for ease of use
     lodf_file.columns = [x.lower() for x in lodf_file.columns]
 
+    # creating processors for parallel processing
+    pool = Pool(mp.cpu_count())
+
+    # splitting the lodf file into chunk for parallel processing
+    lodf_split = np.array_split(lodf_file, mp.cpu_count())
+
+    # noting the starting time
     start = time.time()
 
     # call to filter_horizontal function
-    result = filter_horizontal(constraints, outages, lodf_file)
+    result = pd.concat(pool.map(filter_horizontal, lodf_split))
 
-    '''for col in result:
+    # dropping duplicates 
+    result = result.drop_duplicates(subset=['facilityname', 'contingency', 'date', 'time'])
 
+    result = result.fillna('0')
+
+    for col in result:
         lis = result[col].nunique()
         if lis == 1:
             lis = result[col].unique()
             if "0" in lis and "1" not in lis:
-                result.drop(col, 1, inplace=True)'''
+                result.drop(col, 1, inplace=True)
 
-    time_range = pd.DataFrame({'hour': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]})
-    time_range['hour'] = pd.to_datetime(time_range['hour']).dt.time
+    hours = [(dt.time(i)) for i in range(24)]
 
-    n = len(result) - 1
+    n = len(result)
+
     for id, ro in result.iterrows():
-
-        for i in time_range['hour']:
-
+        for i in hours:
             if ro['time'] != i:
+                n += 1
                 result.at[n] = ro
                 result.at[n, 'binding_status'] = 0
                 result.at[n, 'time'] = i
-                n += 1
-
-        break
 
     # converting the "time" column of result dataframe into datetime object formatted as '%H:%M:%S'
     result['time'] = pd.to_datetime(result['time'], format='%H:%M:%S')
 
+    result = result.drop_duplicates(subset=['facilityname', 'contingency', 'date', 'time', 'binding_status'])
+
     # creating excel file
-    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\TrainingDataset4.xlsx", datetime_format='hh:mm:ss')
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\TrainingDatasetParallel.xlsx", datetime_format='hh:mm:ss')
     # writing the result to the created excel file
     result.to_excel(writer, "dataset")
     # saving the excel file
