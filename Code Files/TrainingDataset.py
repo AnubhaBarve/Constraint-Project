@@ -10,6 +10,8 @@ import pandas as pd
 from tqdm import tqdm
 import datetime
 import string as str
+import numpy as np
+import time
 
 # -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Code starts
@@ -114,6 +116,7 @@ def filter_horizontal(constraints, outages, LODF_file):
 
 def main():
 
+
     # constraints stores the list of constraints (sample) in the form of a dataframe
     constraints = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\Constraints.xlsx", sheet_name="2019 Sample", index=False)
 
@@ -139,18 +142,50 @@ def main():
     # converting the column names to lower case for ease of use
     lodf_file.columns = [x.lower() for x in lodf_file.columns]
 
+    start = time.time()
+
     # call to filter_horizontal function
     result = filter_horizontal(constraints, outages, lodf_file)
+
+    '''for col in result:
+
+        lis = result[col].nunique()
+        if lis == 1:
+            lis = result[col].unique()
+            if "0" in lis and "1" not in lis:
+                result.drop(col, 1, inplace=True)'''
+
+    time_range = pd.DataFrame({'hour': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]})
+    time_range['hour'] = pd.to_datetime(time_range['hour']).dt.time
+
+    n = len(result) - 1
+    for id, ro in result.iterrows():
+
+        for i in time_range['hour']:
+
+            if ro['time'] != i:
+                result.at[n] = ro
+                result.at[n, 'binding_status'] = 0
+                result.at[n, 'time'] = i
+                n += 1
+
+        break
 
     # converting the "time" column of result dataframe into datetime object formatted as '%H:%M:%S'
     result['time'] = pd.to_datetime(result['time'], format='%H:%M:%S')
 
     # creating excel file
-    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\TrainingDataset3.xlsx", datetime_format='hh:mm:ss')
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\TrainingDataset4.xlsx", datetime_format='hh:mm:ss')
     # writing the result to the created excel file
     result.to_excel(writer, "dataset")
     # saving the excel file
     writer.save()
+
+    time_elapsed = (time.time() - start)
+    print(time_elapsed)
+
+    #result = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\TrainingDataset3.xlsx", sheet_name= 'dataset', index=False)
+
 
 # call to main function
 

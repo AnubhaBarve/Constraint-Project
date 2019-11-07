@@ -18,10 +18,13 @@ import datetime
 import multiprocessing as mp
 from multiprocessing import  Pool
 import numpy as np
+import time
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Code starts
 # Global variable declaration for powerworld case
 simauto = None
+
+
 
 # function create sample is used to pick approximately 200 constraints from the list of ocnstraints which
 # fall in the range 2019-01-01 to 2019-07-24 as transmission outages data for 2019 is available within this
@@ -32,7 +35,7 @@ def createsample(inputfile):
 
     # the parameter of the function - inputfile contains list of constraints in the form of a dataframe
     # sample function creates a dataframe with number of rows equivalent to the specified value of n, here n = 200
-    inputfile = inputfile.sample(n=200, replace=True)
+    inputfile = inputfile.sample(n=50, replace=True)
 
     # "date" column of inputfile dataframe is converted to datetime format for ease of use.
     inputfile['date'] = pd.to_datetime(inputfile['date'])
@@ -63,11 +66,8 @@ def createsample(inputfile):
 # the provided parameter to the function i.e. "date"
 
 
-def getoutages(date):
+def getoutages(date, file):
 
-    # file variable stores the transmission outages list containing all the hourly outages for 2019 in the form of
-    # a dataframe
-    file = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\TransmissionOutagesList.xlsx", sheet_name="2019", index=False)
 
     # "startdate" column of file dataframe is converted to datetime format for ease of use.
     file['startdate'] = pd.to_datetime(file['startdate'])
@@ -429,6 +429,8 @@ def main():
 
     print("Sample Creation")
 
+    start = time.time()
+
     # inputfile variable stores the list of hourly constraint-contingency for 2019 in the form a dataframe
     inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\ConstraintContingencyFinalList.xlsx",sheet_name="2019", index=False)
 
@@ -440,6 +442,7 @@ def main():
 
     # creating pool of processes based on the number of processors available in the system
     pool = Pool(mp.cpu_count())
+
     # splitting the inputfile dataframe into multiple chunks for parallel processing
     inputfile_split = np.array_split(inputfile, mp.cpu_count())
 
@@ -455,6 +458,15 @@ def main():
     # saving the excel file
     writer.save()
 
+    time_elapsed = (time.time() - start)
+    print(time_elapsed)
+
+    start = time.time()
+
+    # file variable stores the transmission outages list containing all the hourly outages for 2019 in the form of
+    # a dataframe
+    file = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\TransmissionOutagesList.xlsx",sheet_name="2019", index=False)
+
     print("Outage selection")
     # creating an empty dataframe to store the outages
     outages = pd.DataFrame()
@@ -466,7 +478,8 @@ def main():
     for i, r in tqdm(constraints_unique.iterrows()):
 
         # call to getoutages function where "date" column of the constraints_unique is passed as a parameter
-        outages = outages.append(getoutages(pd.to_datetime(r['date'])))
+        outages = outages.append(getoutages(pd.to_datetime(r['date']), file))
+
 
     # creating an excel file
     writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\Outages.xlsx")
@@ -477,29 +490,8 @@ def main():
     # saving excel file
     writer.save()
 
-    print("PowerWorld Format")
-    # splitting the constraints dataframe in chunks for parallel processing
-    constraints_split = np.array_split(constraints, mp.cpu_count())
-    # call to InterfaceMap function to convert the constraints data in powerworld format
-    powerworldFormat = pd.concat(pool.map(InterfaceMap, constraints_split))
-
-    # creating an excel file
-    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\PowerWorldFormat.xlsx")
-    # writing an excel sheet named "2019" to created excel sheet
-    powerworldFormat.to_excel(writer, "2019")
-    # saving the excel file
-    writer.save()
-
-    print("PowerWorld Definition")
-    # powerworldFile variable storing the path name of the powerworld case
-    powerworldFile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\2019.SEP.Monthly.Auction.NetworkModel_PeakWD.RAW"
-    # outputPath variable storing the path name of the output
-    outputPath = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data"
-    # interfaceList variable storing the path of the file containing constraint data in powerworld format
-    interfaceList = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\PowerWorldFormat.xlsx"
-
-    # call to interfaceDefinition function which defines the list of interfaces into powerworld
-    interfaceDefinition(powerworldFile, interfaceList, "2019", outputPath)
+    time_elapsed = (time.time() - start)
+    print(time_elapsed)
 
     # outputFile variable stores the file path of the result
     outputFile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\CalculationTLR.xlsx"
@@ -519,7 +511,10 @@ def main():
 
     # if entered value is 1 call powerworldLODF function
     if value == 1:
+        start = time.time()
         powerworldLODF(outages, constraintsData)
+        time_elapsed = (time.time() - start)
+        print(time_elapsed)
     # if entered value is 2 call powerworldPTDF function
     elif value == 2:
         powerworldPTDF(outages, constraintsData)
