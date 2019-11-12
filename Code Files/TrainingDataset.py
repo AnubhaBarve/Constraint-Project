@@ -156,7 +156,7 @@ def main():
     # call to filter_horizontal function
     result = pd.concat(pool.map(filter_horizontal, lodf_split))
 
-    # dropping duplicates 
+    # dropping duplicates
     result = result.drop_duplicates(subset=['facilityname', 'contingency', 'date', 'time'])
 
     result = result.fillna('0')

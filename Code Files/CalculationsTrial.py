@@ -509,18 +509,22 @@ def main():
 
     value = raw_input("Enter your choice : ")
 
+    start = time.time()
+
     # if entered value is 1 call powerworldLODF function
     if value == 1:
-        start = time.time()
+
         powerworldLODF(outages, constraintsData)
-        time_elapsed = (time.time() - start)
-        print(time_elapsed)
+
     # if entered value is 2 call powerworldPTDF function
     elif value == 2:
         powerworldPTDF(outages, constraintsData)
     # if entered value is 3 call powerworldTLR function
     else:
         powerworldTLR(constraintsData,0.00000000, outputFile)
+
+    time_elapsed = (time.time() - start)
+    print(time_elapsed)
 
 # call to main function
 
