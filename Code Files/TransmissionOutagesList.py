@@ -1,7 +1,7 @@
 # Created on: September 12, 2019
 # Created by: Anubha Barve (anubha.barve@constellation - Intern 2019)
 # File name: TransmissionOutagesList.py
-# Purpose: This file is developed to create a super-list of constraint-contingency i.e combine unique constraint-contingency( constraint and start date unique) of all years into one file which are mapped (for now only storing
+# Purpose: This file is developed to create a super-list of transmission outages i.e combine unique transmission outages( outage and start date unique) of all years into one file which are mapped (for now only storing
 # data for line and transformer facilities)
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
