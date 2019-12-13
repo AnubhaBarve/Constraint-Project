@@ -1,0 +1,871 @@
+# Created on: November 11, 2019
+# Created by: Anubha Barve (anubha.barve@constellation - Intern 2019)
+# File name: CalculationsTrail.py
+# Purpose: This file is developed to perform lodf, ptdf and tlr calculations to find relationship
+# between a constraint and transmission outage.
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------
+# import statements
+
+import pandas as pd
+from tqdm import tqdm
+import datetime as dt
+import win32com.client
+from win32com.client import Dispatch
+from win32com.client import VARIANT
+import datetime
+import multiprocessing as mp
+from multiprocessing import Pool
+import numpy as np
+import time
+from copy import deepcopy
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Code starts
+
+# calculation function is used for calculating the dependent lodf function in which outage lines are opened
+# and closed in the provided powerworld case file according to requirement
+
+
+def calculation(constraints, file):
+
+    print("Entering !!")
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts PowerWorld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'
+
+    # hides all the python warnings
+    pd.options.mode.chained_assignment = None
+
+    # creating an empty dataframe to store results
+    finalLODF = pd.DataFrame()
+
+    '''# creating an empty dataframe to store date range to make comparison with inputfile dataframe easier and faster.
+    date_range = pd.DataFrame()
+
+    # populating "strtdate" column of date_range dataframe with the start date of 2019
+    date_range.at[0, 'strtdate'] = "2019-01-01"
+
+    # populating "enddate" column of date_range dataframe with the end date of 2019
+    date_range.at[0, 'enddate'] = "2019-07-24"
+
+    # "strtdate" column of date_range dataframe is converted to datetime format for ease of use.
+    date_range['strtdate'] = pd.to_datetime(date_range['strtdate'])
+
+    # "enddate" column of date_range dataframe is converted to datetime format for ease of use.
+    date_range['enddate'] = pd.to_datetime(date_range['enddate'])
+
+    # converting "date" to datetime format for ease of use
+    constraints['date'] = pd.to_datetime(constraints['date'])
+
+    # picking up constraints belonging within the range : "2019-01-01" to "2019-07-24"
+    #constraints = deepcopy(constraints.loc[(constraints['date'] >= date_range.at[0, 'strtdate']) & (constraints['date'] <= date_range.at[0,'enddate'])])
+
+    # extracting date from datetime object
+    constraints['date'] = pd.to_datetime(constraints['date']).dt.date'''
+
+    # filtering the constraints such that all of them have a shadow price greater than 500
+    #constraints = deepcopy(constraints.loc[constraints['shadowprice'] >= 500])
+
+    # picking unique dates in the constraints dataframe
+    #constraints_unique = constraints.drop_duplicates(subset='date', keep='first')
+
+    # creating an empty dataframe
+    outage_set = pd.DataFrame()
+
+    # creating an empty dataframe
+    sample = pd.DataFrame(columns=['Name'])
+
+    # defining transmission outage file columns in outage_set dataframe
+    for x in file.columns:
+
+        outage_set[x] = ""
+
+    #pool = Pool(mp.cpu_count())
+
+    print("Working")
+
+    # noting start time of loop below
+    start = time.time()
+
+    # looping through unique dates and picking all the constraints happening on that date and all
+    # the outages such that the unique date falls within the start and end date of an outage.
+    #for i in tqdm(constraints_unique['date']):
+
+    # picking constraints happening on i date
+    #constraint_sample = constraints.loc[constraints['date'] == i]
+
+    # picking outages such that i falls within start and end date
+    outages_sample = file.loc[(file['start'] <= constraints['date']) & (file['end'] >= constraints['date'])]
+
+    # printing size of picked constraints and outages sample
+    print "Constraints", constraints.shape
+    print "Outages", outages_sample.shape
+
+    # logic - if outage lines are not open but picked in sample then open those lines
+    # if outage lines are open but not picked in sample then close those lines
+    if not outages_sample.empty:
+        set_difference1 = outages_sample.merge(outage_set, how='left', indicator=True)
+        set_difference1 = set_difference1[set_difference1['_merge'] == 'left_only']
+        if not set_difference1.empty:
+            start1 = time.time()
+            openall_outage(set_difference1, simauto)
+            time_elapsed1 = (time.time() - start1)
+            print "Opening Lines", time_elapsed1
+        set_difference2 = outage_set.merge(outages_sample, how='left', indicator=True)
+        set_difference2 = set_difference2[set_difference2['_merge'] == 'left_only']
+        if not set_difference2.empty:
+            start2 = time.time()
+            closeall_outage(set_difference2, simauto)
+            time_elapsed2 = (time.time() - start2)
+            print "Closing Lines", time_elapsed2
+
+        # noting start time before below loop
+        start3 = time.time()
+        # iterating through outage sample dataframe
+        #for id, ro in outages_sample.iterrows():
+        # populating sample datframe with "interface_name" column of constraint_sample dataframe
+        sample['Name'] = constraints['interface_name']
+        # call to powerworldLODF function to calculate lodf
+        finalLODF = powerworldLODF(outages_sample, sample,simauto)
+        # noting the end time of loop above
+        time_elapsed3 = (time.time() - start3)
+        print "Calculation", time_elapsed3
+        # storing the picked outages in a different dataframe
+        outage_set = outages_sample
+
+    # noting end time of the main loop
+    time_elapsed = (time.time() - start)
+    print "Loop Execution", time_elapsed
+    print("Done")
+
+    # return the final resultant dataframe
+    return finalLODF
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# openall_outage opens all given outage lines in the powerworld case file
+
+
+def openall_outage(outages, simauto):
+
+    '''# accessing the global variable declared up top (simauto)
+    global simauto
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts PowerWorld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'''''
+
+    # This is done to accept files with RAW extension
+    # Simauto.OpenCaseType(rfile, 'PTI')
+    # To calculate sensitivities, always enter RUN mode and not EDIT mode
+    simauto.RunSCriptCommand('EnterMode(RUN)')
+
+    # changing the status of outage lines to "Open"
+    outages.loc[:, 'open_close'] = "Open"
+
+    '''# converting the data type of "from_bus_number" column of outages dataframe for ease of use
+    outages['from_bus_number'] = outages['from_bus_number'].astype(int)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['to_bus_number'] = outages['to_bus_number'].astype(int)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['open_close'] = outages['open_close'].astype(str)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['circuit_id'] = outages['circuit_id'].astype(int)'''
+
+    fields = ['BusNumFrom', 'BusNumTo', 'Circuit', 'Status']
+
+    # looping through the outage lines
+    for it, ro in outages.iterrows():
+        # from bus number of branch
+        frombus = ro['from_bus_number']
+        # to bus number of branch
+        to = ro['to_bus_number']
+        # circuit id of branch
+        id = ro['circuit_id']
+        # status of branch
+        status = ro['open_close']
+    # ChangeParametersSingleElement fucntion changes the status of provided outage line
+        simauto.ChangeParametersSingleElement('Branch',['BusNumFrom', 'BusNumTo', 'Circuit', 'Status'],[frombus, to, id, status])
+
+    '''filename = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # saving the result as a powerworld case
+    simauto.SaveCase(filename, "PWB", True)'''
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# closeall_outage closes all given outage lines in the powerworld case file
+
+
+def closeall_outage(outages, simauto):
+
+    '''# accessing the global variable declared up top (simauto)
+    global simauto
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts PowerWorld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'''''
+
+    # This is done to accept files with RAW extension
+    # Simauto.OpenCaseType(rfile, 'PTI')
+    # To calculate sensitivities, always enter RUN mode and not EDIT mode
+    simauto.RunSCriptCommand('EnterMode(RUN)')
+
+    # changing the status of outage lines to "Closed"
+    outages.loc[:, 'open_close'] = "Closed"
+
+    '''# converting the data type of "from_bus_number" column of outages dataframe for ease of use
+    outages['from_bus_number'] = outages['from_bus_number'].astype(int)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['to_bus_number'] = outages['to_bus_number'].astype(int)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['open_close'] = outages['open_close'].astype(str)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['circuit_id'] = outages['circuit_id'].astype(int)'''
+
+    # looping through outage lines
+    for it, ro in outages.iterrows():
+
+        # from bus number of branch
+        frombus = ro['from_bus_number']
+        # to bus number of branch
+        to = ro['to_bus_number']
+        # circuit id of branch
+        id = ro['circuit_id']
+        # status of branch
+        status = ro['open_close']
+        # ChangeParametersSingleElement fucntion changes the status of provided outage line
+        simauto.ChangeParametersSingleElement('Branch',['BusNumFrom', 'BusNumTo', 'Circuit', 'Status'],[frombus, to, id, status])
+
+    '''filename = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # saving the result as a powerworld case
+    simauto.SaveCase(filename, "PWB", True)'''
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# powerworldLODF function is used to calculate dependent lodf for given outages and constraints
+
+
+def  powerworldLODF(outages, monitoredConstraints, simauto):
+
+    # finalLodfDf is an empty dataframe which would be used to store the final LODF calculation result.
+    finalLodfDf = pd.DataFrame()
+
+    '''# accessing the global variable declared up top (simauto)
+    global simauto
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts PowerWorld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'
+
+    #simauto = param['simauto']'''
+
+    # This is done to accept files with RAW extension
+    # Simauto.OpenCaseType(rfile, 'PTI')
+    # To calculate sensitivities, always enter RUN mode and not EDIT mode
+    simauto.RunSCriptCommand('EnterMode(RUN)')
+
+    for i, ro in outages.iterrows():
+        # closing an outage line
+        ro['open_close'] = "Closed"
+
+        # from bus number of outage line
+        frombus = ro['from_bus_number']
+        # to bus number of outage line
+        to = ro['to_bus_number']
+        # circuit id of outage line
+        id = ro['circuit_id']
+        # status of outage line
+        status = ro['open_close']
+        # ChangeParametersSingleElement fucntion changes the status of provided outage line
+        simauto.ChangeParametersSingleElement('Branch', ['BusNumFrom', 'BusNumTo', 'Circuit', 'Status'], [frombus, to, id, status])
+
+        '''# converting the data type of "from_bus_number" column of outages dataframe for ease of use
+        outages['from_bus_number'] = outages['from_bus_number'].astype(int)
+    
+        # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+        outages['to_bus_number'] = outages['to_bus_number'].astype(int)
+        
+        # iterating through outages dataframe
+        #for it, r in outages.iterrows():
+        # a holds the From Bus number
+        a = outages['from_bus_number']
+    
+        # b holds the to bus number
+        b = outages['to_bus_number']
+    
+        # c holds the circuit ID
+        c = outages['circuit_id']
+    
+        # d holds the from bus name
+        d = outages["from_bus_name"]
+    
+        # e holds the To bus name
+        e = outages["to_bus_name"]'''
+
+        # Command to calculate the LODF given from bus number, to bus number and Circuit ID
+        LODFCalc = 'CalculateLODF([BRANCH {} {} {}],DC)'.format(frombus, to, id)
+
+        # Run the LODF command
+        simauto.RunScriptCommand(LODFCalc)
+
+        # ConstraintData is a variant list storing a list of powerWorld object field variables to retrieve
+        # from the simulator
+        constraintData = ["Number", "Name", "LODF", "MW", "LODFCTGMW"]
+
+        # In powerWorld Constraint-Contingency pairs are defined as Interfaces
+
+        # GetParametersMultipleElement command is used to pull data from powerWorld given a list of parameters
+        # The first parameter in GetParametersMultipleElement is the type of parameter you are getting the
+        # parameters for The branches_output stores a set of list of lists returned by GetParametersMultipleElement
+        # containing the parameter values for the Interface device type as requested
+        branches_output = simauto.GetParametersMultipleElement("Interface", constraintData, ' ')
+
+        # df_temp is a temporarty dataframe that holds the Interface(Constraint - Contingency pair) data returned by
+        # powerworld for one monitored Constraint which will dynamically be appended to the finalLodfDf at each
+        # iteration
+        df_temp = pd.DataFrame()
+
+        # To add the outage information for Identification of the constraint data pertaining to the respective
+        # outage data
+        for it1 in range(0, len(constraintData)):
+            df_temp[constraintData[it1]] = branches_output[1][it1]
+            df_temp["from_bus_number"] = frombus
+            df_temp["from_bus_name"] = ro['from_bus_name']
+            df_temp["to_bus_number"] = to
+            df_temp["to_bus_name"] = ro['to_bus_name']
+            df_temp["circuit_id"] = id
+
+        # Merging the df_temp and the monitoredConstraints to filter data based on  the monitored Constraints
+        df_temp = pd.merge(df_temp, monitoredConstraints, how='inner', on=["Name"])
+
+        # Drop empty rows
+        df_temp.dropna(inplace=True)
+
+        # Append the filtered dataframe to the final LODF dataframe
+        finalLodfDf = finalLodfDf.append(df_temp)
+
+        # opening the outage line
+        ro['open_close'] = "Open"
+
+        # from bus number of outage line
+        frombus = ro['from_bus_number']
+        # to bus number of outage line
+        to = ro['to_bus_number']
+        # circuit id of outage line
+        id = ro['circuit_id']
+        # status of outage line
+        status = ro['open_close']
+        # ChangeParametersSingleElement fucntion changes the status of provided outage line
+        simauto.ChangeParametersSingleElement('Branch', ['BusNumFrom', 'BusNumTo', 'Circuit', 'Status'], [frombus, to, id, status])
+
+    # renaming the columns of finalLodfDf dataframe
+    finalLodfDf.rename(columns={'Number': 'Interface Number', 'Name': 'Interface Name'}, inplace=True)
+
+    '''filename = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # saving the result as a powerworld case
+    simauto.SaveCase(filename, "PWB", True)'''
+
+    # return final resultant dataframe
+    return finalLodfDf
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# the function powerworldPTDF is used to calculate PTDF for a given set of outages and constraints
+
+
+def powerworldPTDF(outages,monitoredConstraints):
+
+    # finalLodfDf is an empty dataframe which would be used to store the final PTDF calculation result.
+    finalPTDF = pd.DataFrame()
+
+    global simauto
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts PowerWorld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'
+
+    # This is done to accept files with RAW extension
+    # Simauto.OpenCaseType(rfile, 'PTI')
+    # To calculate sensitivities, always enter RUN mode and not EDIT mode
+    simauto.RunSCriptCommand('EnterMode(RUN)')
+
+    # To solve  the powerFlow in DC
+    simauto.RunSCriptCommand('SolvePowerFlow(DC)')
+
+    # converting the data type of "from_bus_number" column of outages dataframe for ease of use
+    outages['from_bus_number'] = outages['from_bus_number'].astype(int)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['to_bus_number'] = outages['to_bus_number'].astype(int)
+
+    # iterating through outages dataframe
+    for it,r in outages.iterrows():
+        # a holds the From Bus number
+        a = r['from_bus_number']
+
+        # b holds the to bus number
+        b = r['to_bus_number']
+
+        # c holds the circuit ID
+        c = r['circuit_id']
+
+        # d holds the from bus name
+        d = r["from_bus_name"]
+
+        # e holds the To bus name
+        e = r["to_bus_name"]
+
+        # Command to calculate the LODF given from bus number, to bus number and Circuit ID
+        PTDFCalc = 'CalculatePTDF([BUS {}],[BUS {}],DC)'.format(a, b)
+
+        # Run the LODF command
+        simauto.RunScriptCommand(PTDFCalc)
+
+        # ConstraintData is a variant list storing a list of powerWorld object field variables to retrieve from the simulator
+        constraintData = ["Name", "Number", "PTDF", "MW", "HasCTG"]
+
+        # In powerWorld Constraint-Contingency pairs are defined as Interfaces
+
+        # GetParametersMultipleElement command is used to pull data from powerWorld given a list of parameters
+        # The first parameter in GetParametersMultipleElement is the type of parameter you are getting the parameters for
+        # The branches_output stores a set of list of lists returned by GetParametersMultipleElement containing the parameter values for the Interface device type as requested
+        branches_output = simauto.GetParametersMultipleElement("Interface", constraintData, ' ')
+
+        # df_temp is a temporarty dataframe that holds the Interface(Constraint - Contingency pair) data returned by powerworld for one monitored Constraint which will dynamically be appended to the finalLodfDf at each iteration
+        df_temp = pd.DataFrame()
+
+        # To add the outage information for Identification of the constraint data pertaining to the respective outage data
+        for it1 in range(0, len(constraintData)):
+            df_temp[constraintData[it1]] = branches_output[1][it1]
+            df_temp["from_bus_number"] = a
+            df_temp["from_bus_name"] = d
+            df_temp["to_bus_number"] = b
+            df_temp["to_bus_name"] = e
+            df_temp["circuit_id"] = c
+
+        # Merging the df_temp and the monitoredConstraints to filter data based on  the monitored Constraints
+        df_temp = pd.merge(df_temp, monitoredConstraints, how='inner', on=["Name"])
+
+        # Drop empty rows
+        df_temp.dropna(inplace=True)
+
+        # Append the filtered dataframe to the final LODF dataframe
+        finalPTDF = finalPTDF.append(df_temp)
+
+    # renaming the columns of finalLodfDf dataframe
+    finalPTDF.rename(columns={'Number': 'Interface Number', 'Name': 'Interface Name'}, inplace=True)
+
+    # creating an excel file
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\CalculationPTDF.xlsx")
+
+    # writing a sheet named "PTDF" to created excel file
+    finalPTDF.to_excel(writer, "PTDF")
+
+    # save excel file
+    writer.save()
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# the function powerworldTLR is used to calculate TLR for the given parameters
+
+
+def powerworldTLR(Interfacepd, threshold, outputFile):
+
+    # accessing global variable simauto
+    global simauto
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts powerworld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'
+
+    # This is done to accept files with RAW extension
+    # Simauto.OpenCaseType(rfile, 'PTI')
+    # To calculate sensitivities, always enter RUN mode and not EDIT mode
+    simauto.RunSCriptCommand('EnterMode(RUN)')
+
+    # To solve  the powerFlow in DC
+    simauto.RunSCriptCommand('SolvePowerFlow(DC)')
+
+    # The finalTLR dataframe holds the final data for all the monitored Constraints
+    finalTLRBus = pd.DataFrame()
+    finalTLRGen = pd.DataFrame()
+    finalTLRLoad = pd.DataFrame()
+    finalTLRArea = pd.DataFrame()
+    finalTLRInjectionGroup = pd.DataFrame()
+
+    # TLR is a variant list storing a list of powerWorld object field variables to retrieve from the simulator
+    TLR = ["Number", "Name", "AreaNumber", "AreaName", "SensdValuedPinj"]
+    TLR1 = ["BusNum", "BusName", "ID", "AreaName", "AGC", "SensdValuedPinj", "MW", "MWMin", "MWMax",
+            "SensdValuedVset", "VoltSet"]
+    TLR2 = ["BusNum", "BusName", "ID", "AreaName", "SensdValuedPinj", "MW"]
+    TLR3 = ["Number", "Name", "AGC", "GenMW", "LoadMW", "SensdValuedPinj"]
+
+    # To add a function to check if there is an Injectiongroup or not
+    # TLR4 = ["Name", "GenMW", "LoadMW", "SensdValuedPinj"]
+
+    # Iterate over the rows in the Interfacepd to calculate the TLR given a single Constraint-Contingency pair / Interface Name
+    for it,r in tqdm(Interfacepd.iterrows()):
+        a = r['Name']
+
+        Outtlr = simauto.RunScriptCommand('CalculateTLR([INTERFACE "{}"],Buyer,[SLACK],DC)'.format(a))
+
+        branches_output1 = simauto.GetParametersMultipleElement("Bus", TLR, "")
+
+        branches_output2 = simauto.GetParametersMultipleElement("Gen", TLR1, "")
+
+        branches_output3 = simauto.GetParametersMultipleElement("Load", TLR2, "")
+
+        branches_output4 = simauto.GetParametersMultipleElement("Area", TLR3, "")
+
+        # For Injection Groups
+        # branches_output5 = simauto.GetParametersMultipleElement("InjectionGroup", TLR4, "")
+
+        df_temp = pd.DataFrame()
+        df_temp1 = pd.DataFrame()
+        df_temp2 = pd.DataFrame()
+        df_temp3 = pd.DataFrame()
+        # df_temp4 = pd.DataFrame()
+
+        for it1 in range(0, len(TLR)):
+            df_temp[TLR[it1]] = branches_output1[1][it1]
+            df_temp["Interface Name"] = a
+
+        df_temp["SensdValuedPinj"] = pd.to_numeric(df_temp["SensdValuedPinj"])
+
+        df_temp = df_temp[abs(df_temp["SensdValuedPinj"]) > float(threshold)]
+
+        finalTLRBus = finalTLRBus.append(df_temp)
+
+        for it1 in range(0, len(TLR1)):
+            df_temp1[TLR1[it1]] = branches_output2[1][it1]
+            df_temp1["Interface Name"] = a
+
+        df_temp1["SensdValuedPinj"] = pd.to_numeric(df_temp1["SensdValuedPinj"])
+
+        df_temp1 = df_temp1[abs(df_temp1["SensdValuedPinj"]) > float(threshold)]
+
+        finalTLRGen = finalTLRGen.append(df_temp1)
+
+        for it1 in range(0, len(TLR2)):
+            df_temp2[TLR2[it1]] = branches_output3[1][it1]
+            df_temp2["Interface Name"] = a
+
+        df_temp2["SensdValuedPinj"] = pd.to_numeric(df_temp2["SensdValuedPinj"])
+
+        df_temp2 = df_temp2[abs(df_temp2["SensdValuedPinj"]) > float(threshold)]
+
+        finalTLRLoad = finalTLRLoad.append(df_temp2)
+
+        for it1 in range(0, len(TLR3)):
+            df_temp3[TLR3[it1]] = branches_output4[1][it1]
+            df_temp3["Interface Name"] = a
+
+        df_temp3["SensdValuedPinj"] = pd.to_numeric(df_temp3["SensdValuedPinj"])
+
+        df_temp3 = df_temp3[abs(df_temp3["SensdValuedPinj"]) > float(threshold)]
+
+        finalTLRArea = finalTLRArea.append(df_temp3)
+
+    # renaming columns of various dataframes
+    finalTLRBus.rename(columns={'Number': 'Bus Number', 'Name': 'Bus Name'}, inplace=True)
+    finalTLRGen.rename(columns={'BusNum': 'Gen Bus Number', 'BusName': 'Gen Bus Name'}, inplace=True)
+    finalTLRLoad.rename(columns={'BusNum': 'Load Bus Number', 'BusName': 'Load Bus Name'}, inplace=True)
+    finalTLRBus.rename(columns={'Number': 'Bus Number', 'Name': 'Bus Name'}, inplace=True)
+
+    # creating an excel file
+    writer = pd.ExcelWriter(outputFile)
+
+    # writing to the created excel file
+    finalTLRBus.to_excel(writer, "Bus")
+    finalTLRGen.to_excel(writer, "Gen")
+    finalTLRLoad.to_excel(writer, "Load")
+    finalTLRArea.to_excel(writer, "Area")
+
+    # saving the excel file
+    writer.save()
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# powerworldLODFIndependent function is used for independent LODF calculation
+
+
+def powerworldLODFIndependent(outages, monitoredConstraints, simauto):
+    # finalLodfDf is an empty dataframe which would be used to store the final LODF calculation result.
+    finalLodfDf = pd.DataFrame()
+
+    '''# accessing the global variable declared up top (simauto)
+    global simauto
+
+    # rfile holds the path to the powerworld Case file
+    rfile = r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\InterfaceDefinition_Updated.pwb"
+
+    # starts PowerWorld
+    simauto = win32com.client.Dispatch("pwrworld.SimulatorAuto")
+
+    # Command to open the powerworld case
+    simauto.OpenCase(rfile), 'Case open'''
+
+    # This is done to accept files with RAW extension
+    # Simauto.OpenCaseType(rfile, 'PTI')
+    # To calculate sensitivities, always enter RUN mode and not EDIT mode
+    simauto.RunSCriptCommand('EnterMode(RUN)')
+
+    # To solve  the powerFlow in DC
+    simauto.RunSCriptCommand('SolvePowerFlow(DC)')
+
+    # converting the data type of "from_bus_number" column of outages dataframe for ease of use
+    outages['from_bus_number'] = outages['from_bus_number'].astype(int)
+
+    # converting the data type of "to_bus_number" column of outages dataframe for ease of use
+    outages['to_bus_number'] = outages['to_bus_number'].astype(int)
+
+    # iterating through outages dataframe
+    for it, r in outages.iterrows():
+        # a holds the From Bus number
+        a = r['from_bus_number']
+
+        # b holds the to bus number
+        b = r['to_bus_number']
+
+        # c holds the circuit ID
+        c = r['circuit_id']
+
+        # d holds the from bus name
+        d = r["from_bus_name"]
+
+        # e holds the To bus name
+        e = r["to_bus_name"]
+
+        # Command to calculate the LODF given from bus number, to bus number and Circuit ID
+        LODFCalc = 'CalculateLODF([BRANCH {} {} {}],DC)'.format(a, b, c)
+
+        # Run the LODF command
+        simauto.RunScriptCommand(LODFCalc)
+
+        # ConstraintData is a variant list storing a list of powerWorld object field variables to retrieve from the simulator
+        constraintData = ["Number", "Name", "LODF", "MW", "LODFCTGMW"]
+
+        # In powerWorld Constraint-Contingency pairs are defined as Interfaces
+
+        # GetParametersMultipleElement command is used to pull data from powerWorld given a list of parameters
+        # The first parameter in GetParametersMultipleElement is the type of parameter you are getting the parameters for
+        # The branches_output stores a set of list of lists returned by GetParametersMultipleElement containing the parameter values for the Interface device type as requested
+        branches_output = simauto.GetParametersMultipleElement("Interface", constraintData, ' ')
+
+        # df_temp is a temporarty dataframe that holds the Interface(Constraint - Contingency pair) data returned by powerworld for one monitored Constraint which will dynamically be appended to the finalLodfDf at each iteration
+        df_temp = pd.DataFrame()
+
+        # To add the outage information for Identification of the constraint data pertaining to the respective outage data
+        for it1 in range(0, len(constraintData)):
+            df_temp[constraintData[it1]] = branches_output[1][it1]
+            df_temp["from_bus_number"] = a
+            df_temp["from_bus_name"] = d
+            df_temp["to_bus_number"] = b
+            df_temp["to_bus_name"] = e
+            df_temp["circuit_id"] = c
+
+        # Merging the df_temp and the monitoredConstraints to filter data based on  the monitored Constraints
+        df_temp = pd.merge(df_temp, monitoredConstraints, how='inner', on=["Name"])
+
+        # Drop empty rows
+        df_temp.dropna(inplace=True)
+
+        # Append the filtered dataframe to the final LODF dataframe
+        finalLodfDf = finalLodfDf.append(df_temp)
+
+    # renaming the columns of finalLodfDf dataframe
+    finalLodfDf.rename(columns={'Number': 'Interface Number', 'Name': 'Interface Name'}, inplace=True)
+
+    return finalLodfDf
+# --------------------------------------------- function ends ----------------------------------------------------------
+
+# calculationIndependent function is used for calculating independent LODF
+
+
+def calculationIndependent(constraints, file):
+
+    # using global object
+    global simauto
+
+    # hiding python warnings
+    pd.options.mode.chained_assignment = None
+
+    # creating empty dataframe
+    finalLODF = pd.DataFrame()
+
+    # creating an empty dataframe to store date range to make comparison with inputfile dataframe easier and faster.
+    date_range = pd.DataFrame()
+
+    # populating "strtdate" column of date_range dataframe with the start date of 2019
+    date_range.at[0, 'strtdate'] = "2019-01-01"
+
+    # populating "enddate" column of date_range dataframe with the end date of 2019
+    date_range.at[0, 'enddate'] = "2019-07-24"
+
+    # "strtdate" column of date_range dataframe is converted to datetime format for ease of use.
+    date_range['strtdate'] = pd.to_datetime(date_range['strtdate'])
+
+    # "enddate" column of date_range dataframe is converted to datetime format for ease of use.
+    date_range['enddate'] = pd.to_datetime(date_range['enddate'])
+
+    constraints['date'] = pd.to_datetime(constraints['date'])
+
+    constraints = deepcopy(constraints.loc[(constraints['date'] >= date_range.at[0, 'strtdate']) & (constraints['date'] <= date_range.at[0,'enddate'])])
+
+    constraints['date'] = pd.to_datetime(constraints['date']).dt.date
+
+    constraints = deepcopy(constraints.loc[constraints['shadowprice'] >= 500])
+
+    constraints_unique = constraints.drop_duplicates(subset='date', keep='first')
+
+    outage_set = pd.DataFrame()
+
+    sample = pd.DataFrame()
+
+    for x in file.columns:
+
+        outage_set[x] = ""
+
+    print("Working")
+
+    start = time.time()
+
+    for i in tqdm(constraints_unique['date']):
+        constraint_sample = constraints.loc[constraints['date'] == i]
+        outages_sample = file.loc[(file['start'] <= i) & (file['end'] >= i)]
+        print "Constraints", constraint_sample.shape
+        print "Outages", outages_sample.shape
+        sample['Name'] = constraint_sample['interface_name']
+        start3 = time.time()
+        finalLODF = powerworldLODFIndependent(outages_sample, sample, simauto)
+        time_elapsed3 = (time.time() - start3)
+        print "Calculation", time_elapsed3
+
+    time_elapsed = (time.time() - start)
+    print "Loop Execution", time_elapsed
+
+    print("Done")
+    return finalLODF
+
+
+# --------------------------------------------- function ends ----------------------------------------------------------
+# main function
+
+
+def main():
+
+    start = time.time()
+
+    # inputfile variable stores the list of hourly constraint-contingency for 2019 in the form a dataframe
+    inputfile = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\UniqueConstraintContingencyPair\ConstraintContingencyFinalList.xlsx", sheet_name="2019", index=False)
+
+    # converting column names to lower case for ease of use
+    inputfile.columns = [x.lower() for x in inputfile.columns]
+
+    # converting the "datetime" column of inputfile dataframe to datetime object for ease of use
+    inputfile['datetime'] = pd.to_datetime(inputfile['datetime'])
+
+    # extracting the date from the datetime object and storing it into a new column "date"
+    inputfile['date'] = inputfile['datetime'].dt.date
+
+    inputfile = inputfile.loc[inputfile['shadowprice'] >= 500]
+
+    # file variable stores the transmission outages list containing all the hourly outages for 2019 in the form of
+    # a dataframe
+    file = pd.read_excel(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\TransmissionOutagesList.xlsx", sheet_name="2019", index=False)
+
+    # converting the column names to lower case for ease of use
+    file.columns = [x.lower() for x in file.columns]
+
+    # "startdate" column of file dataframe is converted to datetime format for ease of use.
+    file['startdate'] = pd.to_datetime(file['startdate'])
+
+    # "enddate" column of file dataframe is converted to datetime format for ease of use.
+    file['enddate'] = pd.to_datetime(file['enddate'])
+
+    # "startdate" column of file dataframe is converted to date format and stored in a new column "date"
+    # to extract the date part of the datetime object.
+    file['start'] = file['startdate'].dt.date
+
+    # "enddate" column of file dataframe is converted to date format and stored in a new column "end"
+    # to extract the date part of the datetime object.
+    file['end'] = file['enddate'].dt.date
+
+    pool = Pool(mp.cpu_count())
+
+    results = pd.DataFrame()
+
+    final = [pool.apply_async(calculation, args=(ro, file)) for i, ro in inputfile.iterrows()]
+
+    for result in final:
+        temp = result.get()
+        results = pd.concat([results, temp], ignore_index=True)
+
+    results = results.drop_duplicates(subset=['from_bus_number', 'to_bus_number', 'Interface Name', 'LODF'], keep='first')
+
+    # creating an excel file
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\CalculationParallel.xlsx")
+
+    # writing to the created excel file and storing the sheet as "LODF"
+    results.to_excel(writer, "calculation")
+
+    # saving the excel file
+    writer.save()
+
+    '''result = calculation(inputfile, file)
+
+    result = result.drop_duplicates(subset=['from_bus_number', 'to_bus_number', 'Interface Name', 'LODF'], keep='first')
+
+    # creating an excel file
+    writer = pd.ExcelWriter(r"S:\asset ops\GO_Group\Interns\2019\Anubha\Constraint Project\Constraint-Project\Data\Trial Data\CalculationTrialAgain.xlsx")
+
+    # writing to the created excel file and storing the sheet as "LODF"
+    result.to_excel(writer, "calculation")
+
+    # saving the excel file
+    writer.save()'''
+
+    time_elapsed = (time.time() - start)
+    print "Program execution", time_elapsed
+
+# --------------------------------------------- function ends ----------------------------------------------------------
+# call to main function
+
+
+if __name__ == '__main__':
+    main()
